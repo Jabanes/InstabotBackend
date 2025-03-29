@@ -4,7 +4,7 @@
 .env
 firebase-credentials.json
 backend/firebase-credentials.json
-db.sqlite3
+dummy.sqlite3
 
 # Ignore Python cache files
 __pycache__/
