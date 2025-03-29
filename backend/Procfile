@@ -1,1 +1,1 @@
-web: gunicorn instabot.wsgi
+web: gunicorn myproj.wsgi
