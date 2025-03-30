@@ -28,7 +28,7 @@ ENV PATH="${PATH}:/usr/bin"
 WORKDIR /app
 
 # ✅ Copy source code
-COPY . .
+COPY backend/ . 
 
 # ✅ Install Python dependencies
 RUN pip install --upgrade pip && pip install -r requirements.txt
