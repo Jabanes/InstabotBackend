@@ -1,6 +1,5 @@
 from rest_framework.response import Response
-from rest_framework.decorators import api_view,  permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework import status
 import subprocess
 import os
@@ -10,11 +9,10 @@ from .management.commands.extract_following import InstagramFollowing
 from base.serializers import UserUpdateSerializer, MyTokenObtainPairSerializer, RegisterSerializer
 from base.firebase_stores import NonFollowerStore, FollowerStore, FollowingStore, UserScanInfoStore, UserStore
 from base.firebase import db
-from rest_framework_simplejwt.views import TokenObtainPairView
 from firebase_admin import auth as firebase_auth
 import firebase_admin
 from django.utils.timezone import now
-
+from django.core.management import call_command
 
 @api_view(['POST'])
 def login(request):
@@ -99,10 +97,7 @@ def generateNonFollowersList(request):
     try:
 
         # Run your bot (same as before)
-        subprocess.run(
-            ['python', 'manage.py', 'compare_nonfollowers', str(user_id)],
-            check=True
-        )
+        call_command('compare_nonfollowers', str(user_id))
 
         # Fetch from Firebase instead of ORM
         non_followers = NonFollowerStore.list(user_id)
@@ -255,7 +250,7 @@ def run_unfollow_non_followers_script(request):
 
     try:
         # Run unfollow script with Firebase UID
-        subprocess.run(['python', 'manage.py', 'unfollow', str(user_id)], check=True)
+        call_command('unfollow', str(user_id))
 
         # Count after
         after_non_followers = len(list(non_followers_ref.stream()))

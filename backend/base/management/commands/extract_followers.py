@@ -2,24 +2,27 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from base.firebase import db
 from firebase_admin import firestore
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
 import tempfile
 
+# Support for headless control from .env
+HEADLESS_MODE = os.getenv("HEADLESS", "false").lower() == "true"
+
 class InstagramFollowers:
     def __init__(self, time_sleep: int = 10, user=None) -> None:
         self.time_sleep = time_sleep
-        self.user = user
-        self.webdriver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        self.user = user  # Firebase UID (str)
         self.existing_followers = {}
         self.found_usernames = set()
         self.success = False
+
+        # ✅ Undetected Chrome for production-safe botting
+        self.webdriver = uc.Chrome(headless=HEADLESS_MODE)
 
     def open_instagram(self):
         self.webdriver.get("https://www.instagram.com/")
@@ -53,6 +56,7 @@ class InstagramFollowers:
 
     def scroll_and_extract(self):
         try:
+            print("📜 Scrolling and extracting followers...")
             scroll_box = WebDriverWait(self.webdriver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "xyi19xy"))
             )
@@ -71,6 +75,7 @@ class InstagramFollowers:
                 time.sleep(5)
                 new_height = self.webdriver.execute_script("return arguments[0].scrollTop", scroll_box)
                 if new_height == last_height:
+                    print("⏹️ Reached end of scroll.")
                     break
                 last_height = new_height
 
@@ -90,6 +95,8 @@ class InstagramFollowers:
 
         to_add = after_set - before_set
         to_remove = before_set - after_set
+
+        print(f"➕ To Add: {to_add}\n➖ To Remove: {to_remove}")
 
         batch = db.batch()
 
@@ -121,20 +128,15 @@ class Command(BaseCommand):
     help = "Extract followers and save them in Firestore"
 
     def add_arguments(self, parser):
-        parser.add_argument('user_id', type=int)
+        parser.add_argument('user_id', type=str)
 
     def handle(self, *args, **kwargs):
         user_id = kwargs['user_id']
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User with ID {user_id} not found."))
-            return
 
-        bot = InstagramFollowers(user=user)
+        bot = InstagramFollowers(user=user_id)
         bot.run()
 
         if bot.success:
-            self.stdout.write(self.style.SUCCESS(f"✅ Successfully saved followers for {user.username}"))
+            self.stdout.write(self.style.SUCCESS(f"✅ Successfully saved followers for user {user_id}"))
         else:
-            self.stdout.write(self.style.ERROR(f"❌ No data extracted for {user.username}"))
+            self.stdout.write(self.style.ERROR(f"❌ No data extracted for user {user_id}"))

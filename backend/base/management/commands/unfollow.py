@@ -1,16 +1,17 @@
 from django.core.management.base import BaseCommand
 from base.firebase_stores import NonFollowerStore, FollowingStore
 from base.firebase import db
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 import random
 import os
 import tempfile
+
+# Read from .env: HEADLESS=true for Railway, false for local
+HEADLESS_MODE = os.getenv("HEADLESS", "false").lower() == "true"
 
 class InstagramUnfollower:
     def __init__(self, user=None, time_sleep: int = 10):
@@ -18,10 +19,12 @@ class InstagramUnfollower:
         self.time_sleep = time_sleep
         self.success = False
         self.unfollowed = []
-        service = Service(ChromeDriverManager().install())
-        options = webdriver.ChromeOptions()
+
+        options = uc.ChromeOptions()
         options.add_argument("--disable-notifications")
-        self.webdriver = webdriver.Chrome(service=service, options=options)
+
+        # ✅ Use undetected Chrome
+        self.webdriver = uc.Chrome(headless=HEADLESS_MODE, options=options)
 
     def wait(self):
         time.sleep(random.uniform(2, 5))
@@ -31,7 +34,7 @@ class InstagramUnfollower:
 
     def open_instagram(self):
         self.webdriver.get("https://www.instagram.com/")
-        print("\U0001F680 Log into Instagram manually, then press ENTER here.")
+        print("🚀 Log into Instagram manually, then press ENTER here.")
         flag_path = os.path.join(tempfile.gettempdir(), f"ig_ready_user_{self.user}.flag")
 
         if os.path.exists(flag_path):
@@ -69,7 +72,6 @@ class InstagramUnfollower:
             print("📭 No users were unfollowed. Nothing to update.")
             return
 
-        # Remove from NonFollower list
         for username in self.unfollowed:
             NonFollowerStore.delete(self.user, username)
             FollowingStore.delete(self.user, username)
@@ -112,8 +114,8 @@ class Command(BaseCommand):
         bot.run()
 
         if bot.success:
-            self.stdout.write(self.style.SUCCESS(f"Successfully unfollowed users for {user_id}"))
+            self.stdout.write(self.style.SUCCESS(f"✅ Successfully unfollowed users for {user_id}"))
             print("UNFOLLOW_SUCCESS")
         else:
-            self.stdout.write(self.style.WARNING(f"No users were unfollowed for {user_id}"))
+            self.stdout.write(self.style.WARNING(f"⚠️ No users were unfollowed for {user_id}"))
             print("NO_UNFOLLOW_NEEDED")

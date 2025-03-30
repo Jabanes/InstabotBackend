@@ -1,15 +1,15 @@
 from django.core.management.base import BaseCommand
 from base.firebase import db
 from firebase_admin import firestore
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
 import tempfile
+
+HEADLESS_MODE = os.getenv("HEADLESS", "false").lower() == "true"
 
 class InstagramFollowing:
     def __init__(self, time_sleep: int = 10, user=None) -> None:
@@ -18,8 +18,9 @@ class InstagramFollowing:
         self.following = set()
         self.existing_following = {}
         self.success = False
-        service = Service(ChromeDriverManager().install())
-        self.webdriver = webdriver.Chrome(service=service)
+
+        # ✅ Launch undetected Chrome in headless mode
+        self.webdriver = uc.Chrome(headless=HEADLESS_MODE)
 
     def open_instagram(self):
         self.webdriver.get("https://www.instagram.com/")
@@ -60,7 +61,6 @@ class InstagramFollowing:
             last_height = 0
 
             while True:
-                # Get all containers that have both username and a "Following" button
                 user_blocks = scroll_box.find_elements(
                     By.XPATH,
                     ".//div[contains(@class, 'x1yztbdb') or contains(@class, 'x1qjc9v5')]"
@@ -80,9 +80,8 @@ class InstagramFollowing:
                             if username:
                                 self.following.add(username)
                     except Exception:
-                        continue  # Skip invalid or suggested rows
+                        continue
 
-                # Scroll
                 self.webdriver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", scroll_box)
                 time.sleep(5)
                 new_height = self.webdriver.execute_script("return arguments[0].scrollTop", scroll_box)
@@ -94,7 +93,7 @@ class InstagramFollowing:
 
         except Exception as e:
             print(f"⚠️ Error while scrolling or extracting: {str(e)}")
-            
+
     def save_results_to_db(self):
         if not self.user or not self.following:
             print(f"❌ No following extracted for {self.user}.")
@@ -125,7 +124,7 @@ class InstagramFollowing:
             print(f"❌ Queued to remove: {username}")
 
         batch.commit()
-        print("🎯 Batch update complet*e.")
+        print("🎯 Batch update complete.")
         self.success = True
 
     def run(self):
@@ -142,7 +141,7 @@ class Command(BaseCommand):
     help = "Extract following and save them in Firestore"
 
     def add_arguments(self, parser):
-        parser.add_argument('user_id', type=str)  # Firebase UID
+        parser.add_argument('user_id', type=str)
 
     def handle(self, *args, **kwargs):
         user_id = kwargs['user_id']
