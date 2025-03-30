@@ -10,6 +10,9 @@ dummy.sqlite3
 __pycache__/
 **.pyc
 **.pyo
+**.pyd
 
 # Ignore model snapshot file
 models_snapshot.py
+
+.env.*
