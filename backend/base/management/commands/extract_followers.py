@@ -15,7 +15,7 @@ load_dotenv()
 
 # Support for headless control from .env
 HEADLESS_MODE = os.getenv("HEADLESS", "false").lower() == "true"
-LOCAL_CHROME_PATH = os.getenv("CHROME_PATH", None)
+CHROME_PATH = os.getenv("CHROME_PATH", "/usr/bin/google-chrome")  
 
 class InstagramFollowers:
     def __init__(self, time_sleep: int = 10, user=None) -> None:
@@ -29,20 +29,12 @@ class InstagramFollowers:
         options.headless = HEADLESS_MODE
         options.add_argument("--disable-notifications")
 
-        chrome_path = "/usr/bin/google-chrome"
-        options.binary_location = chrome_path
+        print("🔥 Chrome binary path:", CHROME_PATH)
 
-        if LOCAL_CHROME_PATH:
-            options.binary_location = LOCAL_CHROME_PATH
-        else:
-            options.binary_location = "/usr/bin/google-chrome"
-        
-        # ✅ Undetected Chrome for production-safe botting
-
-        print("🔥 Chrome binary path:", options.binary_location)
+        # ✅ Undetected Chrome with explicit executable path
         self.webdriver = uc.Chrome(
             options=options,
-            browser_executable_path=options.binary_location
+            browser_executable_path=CHROME_PATH
         )
 
     def open_instagram(self):
