@@ -34,7 +34,7 @@ class InstagramFollowers:
         # ✅ Undetected Chrome with explicit executable path
         self.webdriver = uc.Chrome(
             options=options,
-            browser_executable_path=CHROME_PATH
+            browser_executable_path="/usr/bin/google-chrome"
         )
 
     def open_instagram(self):
