@@ -36,8 +36,12 @@ class InstagramFollowing:
             options.binary_location = "/usr/bin/google-chrome"
         
         # ✅ Undetected Chrome for production-safe botting
+        print("🔥 Chrome binary path:", options.binary_location)
+        self.webdriver = uc.Chrome(
+            options=options,
+            browser_executable_path=options.binary_location
+        )
 
-        self.webdriver = uc.Chrome(options=options)
 
     def open_instagram(self):
         self.webdriver.get("https://www.instagram.com/")

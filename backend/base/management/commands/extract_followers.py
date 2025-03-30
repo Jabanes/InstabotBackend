@@ -39,7 +39,11 @@ class InstagramFollowers:
         
         # ✅ Undetected Chrome for production-safe botting
 
-        self.webdriver = uc.Chrome(options=options)
+        print("🔥 Chrome binary path:", options.binary_location)
+        self.webdriver = uc.Chrome(
+            options=options,
+            browser_executable_path=options.binary_location
+        )
 
     def open_instagram(self):
         self.webdriver.get("https://www.instagram.com/")

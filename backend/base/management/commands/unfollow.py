@@ -38,7 +38,11 @@ class InstagramUnfollower:
         
         # ✅ Undetected Chrome for production-safe botting
 
-        self.webdriver = uc.Chrome(options=options)
+        print("🔥 Chrome binary path:", options.binary_location)
+        self.webdriver = uc.Chrome(
+            options=options,
+            browser_executable_path=options.binary_location
+        )
 
         # ✅ Use undetected Chrome
 
