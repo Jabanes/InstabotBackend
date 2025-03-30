@@ -9,9 +9,13 @@ import time
 import random
 import os
 import tempfile
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Read from .env: HEADLESS=true for Railway, false for local
 HEADLESS_MODE = os.getenv("HEADLESS", "false").lower() == "true"
+LOCAL_CHROME_PATH = os.getenv("CHROME_PATH", None)
 
 class InstagramUnfollower:
     def __init__(self, user=None, time_sleep: int = 10):
@@ -21,10 +25,22 @@ class InstagramUnfollower:
         self.unfollowed = []
 
         options = uc.ChromeOptions()
+        options.headless = HEADLESS_MODE
         options.add_argument("--disable-notifications")
 
+        chrome_path = "/usr/bin/google-chrome"
+        options.binary_location = chrome_path
+
+        if LOCAL_CHROME_PATH:
+            options.binary_location = LOCAL_CHROME_PATH
+        else:
+            options.binary_location = "/usr/bin/google-chrome"
+        
+        # ✅ Undetected Chrome for production-safe botting
+
+        self.webdriver = uc.Chrome(options=options)
+
         # ✅ Use undetected Chrome
-        self.webdriver = uc.Chrome(headless=HEADLESS_MODE, options=options)
 
     def wait(self):
         time.sleep(random.uniform(2, 5))

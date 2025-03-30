@@ -9,9 +9,13 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import os
 import tempfile
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Support for headless control from .env
 HEADLESS_MODE = os.getenv("HEADLESS", "false").lower() == "true"
+LOCAL_CHROME_PATH = os.getenv("CHROME_PATH", None)
 
 class InstagramFollowers:
     def __init__(self, time_sleep: int = 10, user=None) -> None:
@@ -21,8 +25,21 @@ class InstagramFollowers:
         self.found_usernames = set()
         self.success = False
 
+        options = uc.ChromeOptions()
+        options.headless = HEADLESS_MODE
+        options.add_argument("--disable-notifications")
+
+        chrome_path = "/usr/bin/google-chrome"
+        options.binary_location = chrome_path
+
+        if LOCAL_CHROME_PATH:
+            options.binary_location = LOCAL_CHROME_PATH
+        else:
+            options.binary_location = "/usr/bin/google-chrome"
+        
         # ✅ Undetected Chrome for production-safe botting
-        self.webdriver = uc.Chrome(headless=HEADLESS_MODE)
+
+        self.webdriver = uc.Chrome(options=options)
 
     def open_instagram(self):
         self.webdriver.get("https://www.instagram.com/")
