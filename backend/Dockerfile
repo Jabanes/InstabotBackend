@@ -1,3 +1,5 @@
+
+# CACHE_BUST=2025-03-30
 # Use a Python base image
 FROM python:3.10-slim
 
@@ -15,7 +17,11 @@ RUN curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - 
     apt-get update && \
     apt-get install -y google-chrome-stable
 
-# Set environment variable
+
+RUN which google-chrome && ls -la /usr/bin/google-chrome
+
+# Set environ
+ment variable
 ENV CHROME_PATH="/usr/bin/google-chrome"
 
 # Set work directory
