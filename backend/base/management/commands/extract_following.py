@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 HEADLESS_MODE = os.getenv("HEADLESS", "false").lower() == "true"
-CHROME_PATH = os.getenv("CHROME_PATH", "/usr/bin/google-chrome")  
 
 class InstagramFollowing:
     def __init__(self, time_sleep: int = 10, user=None) -> None:
@@ -27,13 +26,11 @@ class InstagramFollowing:
         options.headless = HEADLESS_MODE
         options.add_argument("--disable-notifications")
 
-        print("🔥 Chrome binary path:", CHROME_PATH)
+        # 🔥 For debugging (optional, if you want to confirm headless mode)
+        print("🔥 Running in headless mode:", HEADLESS_MODE)
 
-        # ✅ Undetected Chrome with explicit executable path
-        self.webdriver = uc.Chrome(
-            options=options,
-            browser_executable_path=CHROME_PATH
-        )
+        # ✅ Let undetected_chromedriver use its built-in Chromium
+        self.webdriver = uc.Chrome(options=options)
 
 
     def open_instagram(self):
